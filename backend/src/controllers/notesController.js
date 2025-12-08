@@ -1,4 +1,5 @@
 import Note from "../models/Note.js";
+import mongoose, { mongo } from "mongoose";
 
 export const getAllNotes = async (req, res) => {
   try {
@@ -32,6 +33,8 @@ export const createNote = async (req, res) => {
 export const updateNote = async (req, res) => {
   try {
     const { title, content } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
+      return res.status(400).json({ message: "Note with this id not found" });
     const updatedNote = await Note.findByIdAndUpdate(
       req.params.id,
       { title, content },
@@ -52,6 +55,9 @@ export const updateNote = async (req, res) => {
 
 export const deleteNote = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid Id" });
+    }
     await Note.deleteOne({ _id: req.params.id });
     res
       .status(200)
@@ -59,5 +65,18 @@ export const deleteNote = async (req, res) => {
   } catch (error) {
     console.log("error in deleteNote", error);
     res.status(500).json({ message: "internal server error" });
+  }
+};
+
+export const getNoteById = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
+      return res.status(400).json({ message: "Note not found with this Id" });
+
+    const note = await Note.find({ _id: req.params.id });
+    res.status(200).json(note);
+  } catch (error) {
+    console.error("Error in getNoteById", error);
+    res.status(500).json("Internal Server Error");
   }
 };
